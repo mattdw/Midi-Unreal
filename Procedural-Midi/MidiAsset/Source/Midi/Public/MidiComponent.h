@@ -40,6 +40,10 @@ public:
 	//Changes the Speed of MIDI playback
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "MIDI|Processor")
 	float PlaySpeed = 1;
+
+	// Use the platform clock, or game time?
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "MIDI|Processor")
+	bool UseRealClock = true;
 	
 	// loads the Midi Asset Data
 	UFUNCTION(BlueprintCallable, Category = "MIDI|Processor")
