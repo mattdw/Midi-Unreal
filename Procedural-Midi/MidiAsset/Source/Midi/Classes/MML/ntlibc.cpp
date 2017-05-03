@@ -29,7 +29,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "MusicMacroLanguagePrivatePCH.h"
+#include "MidiPrivatePCH.h"
 
 #include "ntlibc.h"
 

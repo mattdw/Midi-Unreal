@@ -10,7 +10,7 @@
 #include "Event/ChannelAftertouch.h"
 #include "Event/ChannelEvent.h"
 #include "Event/Controller.h"
-#include "Event/NoteAftertouch.h"
+#include "Event/NoteAfterTouch.h"
 #include "Event/NoteOff.h"
 #include "Event/NoteOn.h"
 #include "Event/PitchBend.h"
@@ -22,6 +22,8 @@
 #include "MidiAsset.h"
 
 #include "Util/MidiProcessor.h"
+
+#include "MML/LabMidiSong.h"
 
 // Sets default values for this component's properties
 UMidiComponent::UMidiComponent() : PlaySpeed(1.0f), UseRealClock(true)
@@ -97,6 +99,29 @@ void UMidiComponent::LoadFile(FString path) {
 	mProcessor.load(*mMidiFile);
 }
 
+void UMidiComponent::LoadMML(FString path) {
+	if (mProcessor.isRunning()) return;
+
+	if (mMidiFile)
+		delete mMidiFile;
+	mMidiFile = NULL;
+
+	char* a = new char[path.Len()];
+	for (int i = 0; i < path.Len(); i++)
+		a[i] = path[i];
+
+	//mMidiFile = Lab::MidiSong::parseMML(a, (int)path.Len(), false);
+	//delete[] a;
+	//mProcessor.load(*mMidiFile);
+
+	Lab::MidiSong song;
+	song.trackNumber = 0;
+	song.LoadString(path);
+	mMidiFile = new MidiFile();
+	mMidiFile->addTrack(song.track);
+	mProcessor.load(*mMidiFile);
+}
+
 void UMidiComponent::onEvent(MidiEvent* _event) {
 	if (_event->getType() >= ChannelEvent::NOTE_OFF && _event->getType() <= ChannelEvent::PITCH_BEND) {
 		ChannelEvent* channelEvent = static_cast<ChannelEvent*>(_event);
@@ -106,6 +131,14 @@ void UMidiComponent::onEvent(MidiEvent* _event) {
 		_midiEvent.Channel = channelEvent->getChannel() & 0x0F;
 		_midiEvent.Data1 = channelEvent->getValue1() & 0xFF;
 		_midiEvent.Data2 = channelEvent->getValue2() & 0xFF;
+		
+		if (SimplifyNote) {
+			// Running Status Event [Improved Midi Performance]
+			if (_event->getType() == ChannelEvent::NOTE_OFF) {
+				_midiEvent.Type = static_cast<EMidiTypeEnum>(ChannelEvent::NOTE_ON & 0X0F);
+				_midiEvent.Data2 = 0 & 0XFF;
+			}
+		}
 
 		OnMidiEvent.Broadcast(_midiEvent);
 	}
